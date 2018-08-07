@@ -11,29 +11,17 @@ import UIKit
 class TodoeyTableViewController: UITableViewController {
 
         var itemArray = [Item]()
-        var defaults = UserDefaults.standard
+        let dataFilepath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let dataFilepath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
-        print(dataFilepath)
-        let newItem = Item()
-        newItem.title = "Milk"
-        itemArray.append(newItem)
-        
-        let newItem2 = Item()
-        newItem2.title = "Eggs"
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem3.title = "Bread"
-        itemArray.append(newItem3)
+       loadItems()
        
 
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item]{
-            itemArray = items
-        }
+//        if let items = defaults.array(forKey: "TodoListArray") as? [Item]{
+//            itemArray = items
+//        }
       
         // Do any additional setup after loading the view, typically from a nib.
     }
@@ -73,7 +61,7 @@ class TodoeyTableViewController: UITableViewController {
 //            itemArray[indexPath.row].done = false
 //        }
         
-        tableView.reloadData()
+        saveItems()
         
 //     previous code for check mark
 //        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark{
@@ -92,8 +80,7 @@ class TodoeyTableViewController: UITableViewController {
             newItem.title = textField.text!
            // what will happen when the user will tap on the add button
             self.itemArray.append(newItem)
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
-            self.tableView.reloadData()
+            self.saveItems()
         }
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create New Item"
@@ -102,6 +89,27 @@ class TodoeyTableViewController: UITableViewController {
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
+    }
+    
+    func saveItems(){
+        let encoder = PropertyListEncoder()
+        do{
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilepath!)
+        }catch{
+            print("error encoding data \(error)")
+        }
+        self.tableView.reloadData()
+    }
+    
+    func loadItems(){
+        let data = try? Data(contentsOf: dataFilepath!)
+        let decoder = PropertyListDecoder()
+        do{
+            itemArray = try decoder.decode([Item].self, from: data!)
+        }catch{
+            print("error decoding item array \(error)")
+        }
     }
     
 }
